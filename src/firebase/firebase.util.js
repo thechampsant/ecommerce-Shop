@@ -1,6 +1,8 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore'
 import { getAuth, GoogleAuthProvider,signInWithPopup } from "firebase/auth";
+import { getFirestore, doc, getDoc, setDoc} from 'firebase/firestore';
+
 
 const config = 
     {
@@ -17,20 +19,34 @@ export const firestore = firebase.firestore()
 
 const provider = new GoogleAuthProvider();
 
-provider.setCustomParameters({prompt: 'select_account'});
+provider.setCustomParameters({
+    prompt: 'select_account'
+});
 
+const auth = getAuth();
 
-const signInWithGoogle = async() => {
-    const auth = getAuth()
-    await signInWithPopup(auth, provider)
-    .then((result) => {
-            const user = result.user;
-            console.log(user);
-        })
-    .catch((err) => {
-            console.log(err);
-        })
+export const signInWithGoogle = () => signInWithPopup(auth, provider);
+
+export const db = getFirestore();
+
+export const createUserDocumentFromAuth = async (userAuth) => {
+    const userDocRef = doc(db, 'users', userAuth.uid);
+    const userSnapshot = await getDoc(userDocRef)
+    
+    if(!userSnapshot.exists()){
+        const {displayName, email} = userAuth;
+        const createdAt = new Date();
+        try{
+            await setDoc(userDocRef,{
+                displayName,
+                email,
+                createdAt
+            })
+        } catch(error){
+            console.log('error creating a user', error.message);
+        }
+    }
+
+    return userDocRef;
 }
-
-export default signInWithGoogle 
 
