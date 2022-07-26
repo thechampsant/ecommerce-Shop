@@ -3,8 +3,7 @@ import React from "react";
 import './sign-in.styles.scss'
 import FormInput from "../form-input/form-input.component";
 import CustomButton from "../custom-button/custom-button.component";
-
-import {signInWithGoogle, createUserDocumentFromAuth}  from "../../firebase/firebase.util";
+import {signInWithGoogle, createUserDocumentFromAuth, signInUserWithEmailAndPassword}  from "../../firebase/firebase.util";
 
 export default class SignIn extends React.Component {
     constructor(props){
@@ -15,10 +14,34 @@ export default class SignIn extends React.Component {
             password: ''
         }
     }
-    handleSumbit = event => {
+    handleSumbit = async event => {
         event.preventDefault()
+        const {email, password} = this.state;
+        try{
+            await signInUserWithEmailAndPassword(email, password)
+            .then((res) => console.log(res))
+            .catch((error) => {
+                switch(error.code){
+                    case 'auth/wrong-password' :
+                        alert('wrong password for the email');
+                        break;
+                    case 'auth/user-not-found' :
+                        alert('user does not exists');
+                        break;
+                    default :
+                        alert(error.code);
+                }
+            })
+            this.resetFormField();
+        }catch(err){
+           console.log(err);
+        }
+    }
+
+    resetFormField = () => {
         this.setState({email: '', password: ''})
     }
+
     handleChange = event =>{
         const {value, name} = event.target
         this.setState({[name]: value}) //dynamically setting the values for both email and password []
@@ -35,7 +58,7 @@ export default class SignIn extends React.Component {
     render() {
         return (
             <div className="sign-in">
-                <h2>I already have an account</h2>
+                <h2>Already have an account?</h2>
                 <span>Sign in with your email and password</span>
                 <form onSubmit={this.handleSumbit}>
                     <FormInput 

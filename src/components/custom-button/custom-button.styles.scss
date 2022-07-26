@@ -13,6 +13,9 @@
     font-weight: bolder;
     border: none;
     cursor: pointer;
+    &:not(:last-child){
+      margin-right: 5px;
+    }
   
     &:hover {
       background-color: white;

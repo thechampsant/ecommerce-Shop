@@ -1,6 +1,12 @@
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore'
-import { getAuth, GoogleAuthProvider,signInWithPopup } from "firebase/auth";
+import { 
+    getAuth, 
+    GoogleAuthProvider,
+    signInWithPopup,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword
+} from "firebase/auth";
 import { getFirestore, doc, getDoc, setDoc} from 'firebase/firestore';
 
 
@@ -25,14 +31,16 @@ provider.setCustomParameters({
 
 const auth = getAuth();
 
-export const signInWithGoogle = () => signInWithPopup(auth, provider);
+export const signInWithGoogle = async() => await signInWithPopup(auth, provider);
 
 export const db = getFirestore();
 
-export const createUserDocumentFromAuth = async (userAuth) => {
+export const createUserDocumentFromAuth = async (userAuth, additionalInfo = {}) => {
     const userDocRef = doc(db, 'users', userAuth.uid);
     const userSnapshot = await getDoc(userDocRef)
     
+    
+
     if(!userSnapshot.exists()){
         const {displayName, email} = userAuth;
         const createdAt = new Date();
@@ -40,13 +48,22 @@ export const createUserDocumentFromAuth = async (userAuth) => {
             await setDoc(userDocRef,{
                 displayName,
                 email,
-                createdAt
+                createdAt,
+                ...additionalInfo
             })
         } catch(error){
-            console.log('error creating a user', error.message);
+            console.log('error creating a user ', error.message);
         }
     }
 
     return userDocRef;
 }
 
+export const createAuthUserWithEmailAndPassword = (email, password) => {
+    if (!email || ! password) return;
+    return createUserWithEmailAndPassword(auth, email, password);
+}
+
+export const signInUserWithEmailAndPassword =  (email, password) => {
+    return signInWithEmailAndPassword(auth, email, password);
+}
